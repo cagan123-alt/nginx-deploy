@@ -1,0 +1,46 @@
+version: '3.5'
+
+services:
+  traefik:
+    image: traefik:latest
+    container_name: traefik
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+       proxy:
+    ports:
+      - 80:80
+      - 443:443
+    environment:
+      - CF_API_EMAIL=parlapancagan0907@gmail.com
+      - CF_DNS_API_TOKEN=UapBtInb__O8HY1QbhlFAJ4FOA5by5srCAjlg4wc
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /home/ubuntu/docker/traefik/traefik.yml:/traefik.yml:ro
+      - /home/ubuntu/docker/traefik/acme.json:/acme.json
+      - /home/ubuntu/docker/traefik/config.yml:/config.yml:ro
+      - /home/ubuntu/docker/traefik/logs:/var/log/traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.entrypoints=http"
+      - "traefik.http.routers.traefik.rule=Host(`traefik-dashboard.iotwith.website`)"
+      - "traefik.http.middlewares.traefik-auth.basicauth.users=caganbey:$$apr1$$t7tcmX0S$$1xLa3HjYPy3dpOlrn3ezS1"
+      - "traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https"
+      - "traefik.http.routers.traefik.middlewares=traefik-https-redirect"
+      - "traefik.http.routers.traefik-secure.entrypoints=https"
+      - "traefik.http.routers.traefik-secure.rule=Host(`traefik-dashboard.iotwith.website`)"
+      - "traefik.http.routers.traefik-secure.middlewares=traefik-auth"
+      - "traefik.http.routers.traefik-secure.tls=true"
+      - "traefik.http.routers.traefik-secure.tls.certresolver=cloudflare"
+      - "traefik.http.routers.traefik-secure.tls.domains[0].main=iotwith.website"
+      - "traefik.http.routers.traefik-secure.tls.domains[0].sans=*.iotwith.website"
+      - "traefik.http.routers.traefik-secure.service=api@internal"
+
+
+networks:
+  proxy:
+    name: proxy
+    external: true
